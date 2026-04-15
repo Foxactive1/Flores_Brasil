@@ -1,1 +1,443 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+  <title>Flores Brasil — Flores e Presentes</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --terra: #2d1f14;
+      --musgo: #3a4a2f;
+      --seco: #7a5b4b;
+      --rosa-seco: #c4877a;
+      --petala: #e8b4a2;
+      --creme: #faf3e8;
+      --floral-bg: #fff9f2;
+      --font-serif: 'Cormorant Garamond', Georgia, serif;
+      --font-sans: 'Jost', sans-serif;
+    }
+    body { font-family: var(--font-sans); background: var(--floral-bg); color: var(--terra); overflow-x: hidden; }
+    #navbar { position: sticky; top: 0; z-index: 100; background: rgba(250,243,232,0.94); backdrop-filter: blur(10px); padding: 12px 24px; display: flex; align-items: center; justify-content: space-between; transition: box-shadow 0.25s; }
+    #navbar.scrolled { box-shadow: 0 4px 16px rgba(0,0,0,0.05); }
+    .brand { font-family: var(--font-serif); font-size: 1.6rem; font-weight: 600; color: var(--terra); text-decoration: none; letter-spacing: -0.3px; }
+    .btn-nav { background: none; border: 1px solid var(--rosa-seco); color: var(--seco); border-radius: 40px; padding: 6px 18px; font-family: var(--font-sans); font-size: 0.85rem; cursor: pointer; transition: all 0.2s; }
+    .btn-nav:hover { background: var(--rosa-seco); color: white; }
+    .hero { text-align: center; padding: 70px 24px 50px; background: linear-gradient(135deg, var(--creme) 0%, #ffe6dc 100%); }
+    .hero h1 { font-family: var(--font-serif); font-size: clamp(2rem,5.5vw,3.6rem); font-weight: 350; }
+    .hero p { margin-top: 12px; color: var(--seco); }
+    .tabs-wrapper { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; padding: 28px 24px 0; }
+    .tab { background: none; border: 1px solid var(--petala); color: var(--seco); border-radius: 40px; padding: 8px 22px; cursor: pointer; transition: all 0.2s; }
+    .tab.active, .tab:hover { background: var(--rosa-seco); border-color: var(--rosa-seco); color: white; }
+    .cardapio-section { padding: 20px 24px 48px; max-width: 1200px; margin: 0 auto; }
+    .cardapio-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px,1fr)); gap: 26px; padding-top: 28px; }
+    .item-card { background: white; border-radius: 28px; padding: 24px 20px 20px; box-shadow: 0 6px 14px rgba(0,0,0,0.02); transition: all 0.25s; display: flex; flex-direction: column; gap: 10px; border: 1px solid rgba(200,170,150,0.2); }
+    .item-card:hover { transform: translateY(-5px); box-shadow: 0 20px 28px -12px rgba(0,0,0,0.12); border-color: var(--petala); }
+    .item-emoji { font-size: 2.8rem; }
+    .item-name { font-family: var(--font-serif); font-size: 1.2rem; font-weight: 600; }
+    .item-desc { font-size: 0.8rem; color: var(--seco); line-height: 1.45; flex: 1; }
+    .item-footer { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; }
+    .item-price { font-weight: 600; color: var(--musgo); }
+    .item-tag { font-size: 0.65rem; background: var(--petala); padding: 2px 10px; border-radius: 30px; margin-left: 8px; }
+    .btn-add { background: var(--rosa-seco); color: white; border: none; border-radius: 40px; padding: 6px 20px; cursor: pointer; transition: 0.2s; }
+    .btn-add:hover { background: var(--seco); transform: scale(0.97); }
+    #cart-fab { position: fixed; bottom: 26px; right: 26px; z-index: 200; background: var(--rosa-seco); color: white; border: none; border-radius: 60px; width: 60px; height: 60px; font-size: 1.7rem; cursor: pointer; box-shadow: 0 6px 18px rgba(196,135,122,0.5); display: none; align-items: center; justify-content: center; transition: transform 0.2s; }
+    #cart-fab.visible { display: flex; }
+    #cart-fab:hover { transform: scale(1.07); }
+    #cart-badge { position: absolute; top: 0px; right: 0px; background: var(--musgo); color: white; border-radius: 50%; width: 22px; height: 22px; font-size: 0.7rem; font-weight: bold; display: flex; align-items: center; justify-content: center; }
+    #cart-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); z-index: 300; backdrop-filter: blur(3px); }
+    #cart-overlay.open { display: block; }
+    #cart-drawer { position: fixed; top: 0; right: -100%; width: min(440px,92vw); height: 100vh; background: white; z-index: 400; display: flex; flex-direction: column; transition: right 0.3s cubic-bezier(0.2,0.9,0.4,1.1); border-radius: 24px 0 0 24px; box-shadow: -8px 0 32px rgba(0,0,0,0.1); }
+    #cart-drawer.open { right: 0; }
+    .drawer-header { padding: 20px 24px; border-bottom: 1px solid #f0e4dc; display: flex; justify-content: space-between; align-items: center; }
+    .drawer-header h2 { font-family: var(--font-serif); font-size: 1.4rem; }
+    .btn-close { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--seco); }
+    #cart-items { flex: 1; overflow-y: auto; padding: 16px 20px; }
+    #cart-empty-state { text-align: center; padding: 48px 20px; color: #bba18e; display: block; }
+    .cart-item { display: flex; align-items: center; gap: 14px; padding: 14px 0; border-bottom: 1px solid #f3e7e0; }
+    .ci-emoji { font-size: 2rem; }
+    .ci-info { flex: 1; }
+    .ci-name { font-weight: 600; }
+    .ci-price { font-size: 0.8rem; color: var(--seco); margin-top: 4px; }
+    .ci-controls { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+    .ci-btn { background: var(--creme); border: 1px solid var(--petala); border-radius: 40px; width: 30px; height: 30px; cursor: pointer; font-weight: bold; }
+    .ci-remove { background: none; border: none; color: #c0a28e; cursor: pointer; font-size: 1.2rem; }
+    #drawer-footer { border-top: 1px solid #efded5; padding: 20px 24px 30px; background: white; display: none; }
+    .drawer-obs textarea { width: 100%; border: 1px solid #eeded4; border-radius: 20px; padding: 10px 14px; font-family: var(--font-sans); resize: vertical; }
+    .summary-row { display: flex; justify-content: space-between; margin: 14px 0 12px; font-weight: 500; }
+    #summary-total { font-weight: 700; color: var(--musgo); }
+    .btn-whatsapp { width: 100%; background: #25d366; color: white; border: none; border-radius: 40px; padding: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: background 0.2s; }
+    .btn-whatsapp:hover { background: #1eac54; }
+    .btn-whatsapp:disabled { background: #b0b7ae; cursor: not-allowed; }
+    #entrega-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 500; align-items: center; justify-content: center; }
+    #entrega-overlay.open { display: flex; }
+    #entrega-modal { background: white; border-radius: 32px; padding: 28px; width: min(500px,92vw); max-height: 90vh; overflow-y: auto; }
+    .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 14px; }
+    .field input { border: 1px solid #e6d5ca; border-radius: 18px; padding: 10px 14px; }
+    .btn-salvar { width: 100%; background: var(--rosa-seco); color: white; border: none; border-radius: 40px; padding: 12px; margin-top: 6px; cursor: pointer; }
+    #cart-toast { position: fixed; bottom: 100px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--terra); color: #fef2e6; padding: 10px 24px; border-radius: 40px; opacity: 0; transition: 0.25s; pointer-events: none; z-index: 600; white-space: nowrap; }
+    #cart-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .reveal { opacity: 0; transform: translateY(20px); transition: 0.55s; }
+    .reveal.visible { opacity: 1; transform: translateY(0); }
+  </style>
+</head>
+<body>
 
+<nav id="navbar">
+  <a href="/" class="brand">🌸 Flores Brasil</a>
+  <div class="nav-actions">
+    <button class="btn-nav" id="open-entrega-btn">📍 Entrega</button>
+  </div>
+</nav>
+
+<section class="hero reveal">
+  <h1>Flores &amp; Presentes com Amor</h1>
+  <p>Entregamos emoções — Franca e região</p>
+</section>
+
+<div class="tabs-wrapper reveal">
+  <button class="tab active" data-tab="flores">🌷 Flores</button>
+  <button class="tab" data-tab="chocolates">🍫 Chocolates</button>
+  <button class="tab" data-tab="presentes">🎁 Presentes</button>
+  <button class="tab" data-tab="cartoes">💌 Cartões</button>
+</div>
+
+<section class="cardapio-section">
+  <div id="tab-flores" class="cardapio-grid"></div>
+  <div id="tab-chocolates" class="cardapio-grid" style="display: none;"></div>
+  <div id="tab-presentes" class="cardapio-grid" style="display: none;"></div>
+  <div id="tab-cartoes" class="cardapio-grid" style="display: none;"></div>
+</section>
+
+<button id="cart-fab" aria-label="Abrir carrinho">🛒 <span id="cart-badge">0</span></button>
+
+<div id="cart-overlay"></div>
+<div id="cart-drawer">
+  <div class="drawer-header">
+    <h2>🛒 Meu Pedido</h2>
+    <button class="btn-close" id="close-drawer-btn">✕</button>
+  </div>
+  <div id="cart-items">
+    <div id="cart-empty-state">🌸<br>Seu carrinho está vazio.<br>Adicione flores e presentes!</div>
+    <div id="cart-items-list"></div>
+  </div>
+  <div id="drawer-footer">
+    <div class="drawer-obs">
+      <textarea id="cart-obs" rows="2" placeholder="✨ Alguma observação? Ex: trocar fita, horário especial..."></textarea>
+    </div>
+    <div class="summary-row">
+      <span id="summary-qty">0 itens</span>
+      <span id="summary-total">R$ 0,00</span>
+    </div>
+    <button class="btn-whatsapp" id="btn-finalizar">💬 Finalizar via WhatsApp</button>
+  </div>
+</div>
+
+<div id="entrega-overlay">
+  <div id="entrega-modal">
+    <h3>📍 Endereço de Entrega</h3>
+    <div class="field"><label>Logradouro *</label><input id="e-logradouro" placeholder="Rua, Avenida..."></div>
+    <div style="display:flex; gap:12px;"><div class="field" style="flex:1"><label>Número</label><input id="e-numero" placeholder="123"></div><div class="field" style="flex:2"><label>Complemento</label><input id="e-complemento" placeholder="Apto"></div></div>
+    <div class="field"><label>Bairro *</label><input id="e-bairro" placeholder="Bairro"></div>
+    <div style="display:flex; gap:12px;"><div class="field"><label>Cidade</label><input id="e-cidade" value="Franca"></div><div class="field" style="max-width:80px"><label>UF</label><input id="e-estado" value="SP" maxlength="2"></div><div class="field"><label>CEP</label><input id="e-cep" placeholder="14400-000"></div></div>
+    <div class="field"><label>Referência</label><input id="e-referencia" placeholder="Ponto de referência"></div>
+    <button class="btn-salvar" id="salvar-endereco">✅ Salvar Endereço</button>
+    <button class="btn-nav" id="cancelar-endereco" style="width:100%; margin-top:12px;">Cancelar</button>
+  </div>
+</div>
+<div id="cart-toast"><span id="toast-msg"></span></div>
+
+<script>
+  // ---------- CONFIG ----------
+  const API_BASE = '';
+  let cart = {};
+  let enderecoEntrega = null;
+  let clienteInfo = null;
+
+  // Elementos
+  const cartBadge = document.getElementById('cart-badge');
+  const cartFab = document.getElementById('cart-fab');
+  const cartOverlay = document.getElementById('cart-overlay');
+  const cartDrawer = document.getElementById('cart-drawer');
+  const cartEmptyState = document.getElementById('cart-empty-state');
+  const cartItemsList = document.getElementById('cart-items-list');
+  const drawerFooter = document.getElementById('drawer-footer');
+  const summaryQtySpan = document.getElementById('summary-qty');
+  const summaryTotalSpan = document.getElementById('summary-total');
+
+  function showToast(msg) {
+    const toast = document.getElementById('cart-toast');
+    document.getElementById('toast-msg').innerText = msg;
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 2600);
+  }
+
+  function escapeHtml(str) {
+    if (!str) return '';
+    return String(str).replace(/[&<>]/g, function(m) {
+      if (m === '&') return '&amp;';
+      if (m === '<') return '&lt;';
+      if (m === '>') return '&gt;';
+      return m;
+    });
+  }
+
+  // ---------- CARRINHO ----------
+  function updateCartUI() {
+    const totalQty = Object.values(cart).reduce((s, i) => s + i.qty, 0);
+    cartBadge.innerText = totalQty;
+    cartFab.classList.toggle('visible', totalQty > 0);
+    renderCartItems();
+  }
+
+  function renderCartItems() {
+    const keys = Object.keys(cart);
+    if (keys.length === 0) {
+      cartEmptyState.style.display = 'block';
+      cartItemsList.innerHTML = '';
+      drawerFooter.style.display = 'none';
+      return;
+    }
+    cartEmptyState.style.display = 'none';
+    let html = '';
+    let totalVal = 0, totalItens = 0;
+    for (let id of keys) {
+      const item = cart[id];
+      totalVal += item.price * item.qty;
+      totalItens += item.qty;
+      html += `<div class="cart-item">
+        <span class="ci-emoji">${escapeHtml(item.emoji)}</span>
+        <div class="ci-info">
+          <div class="ci-name">${escapeHtml(item.name)}</div>
+          <div class="ci-price">R$ ${item.price.toFixed(2).replace('.',',')} × ${item.qty}</div>
+          <div class="ci-controls">
+            <button class="ci-btn decr-item" data-id="${item.id}">−</button>
+            <span class="ci-qty">${item.qty}</span>
+            <button class="ci-btn incr-item" data-id="${item.id}">+</button>
+          </div>
+        </div>
+        <button class="ci-remove remove-item" data-id="${item.id}">✕</button>
+      </div>`;
+    }
+    cartItemsList.innerHTML = html;
+    summaryQtySpan.innerText = `${totalItens} ${totalItens === 1 ? 'item' : 'itens'}`;
+    summaryTotalSpan.innerText = `R$ ${totalVal.toFixed(2).replace('.',',')}`;
+    drawerFooter.style.display = 'block';
+
+    // Eventos dinâmicos
+    document.querySelectorAll('.decr-item').forEach(btn => {
+      btn.removeEventListener('click', handleDecr);
+      btn.addEventListener('click', handleDecr);
+    });
+    document.querySelectorAll('.incr-item').forEach(btn => {
+      btn.removeEventListener('click', handleIncr);
+      btn.addEventListener('click', handleIncr);
+    });
+    document.querySelectorAll('.remove-item').forEach(btn => {
+      btn.removeEventListener('click', handleRemove);
+      btn.addEventListener('click', handleRemove);
+    });
+  }
+
+  function handleDecr(e) { const id = parseInt(e.currentTarget.dataset.id); changeQty(id, -1); }
+  function handleIncr(e) { const id = parseInt(e.currentTarget.dataset.id); changeQty(id, 1); }
+  function handleRemove(e) { const id = parseInt(e.currentTarget.dataset.id); removeItem(id); }
+
+  function changeQty(id, delta) {
+    if (!cart[id]) return;
+    cart[id].qty += delta;
+    if (cart[id].qty <= 0) delete cart[id];
+    updateCartUI();
+    if (Object.keys(cart).length === 0) showToast("🛒 Carrinho vazio");
+  }
+
+  function removeItem(id) {
+    if (cart[id]) delete cart[id];
+    updateCartUI();
+  }
+
+  function addToCart(id, name, emoji, price) {
+    const parsedPrice = parseFloat(price);
+    if (cart[id]) cart[id].qty++;
+    else cart[id] = { id, name, emoji, price: parsedPrice, qty: 1 };
+    updateCartUI();
+    showToast(`${emoji} ${name} adicionado!`);
+  }
+
+  // ---------- PRODUTOS ----------
+  async function carregarProdutos() {
+    try {
+      const res = await fetch(`${API_BASE}/api/produtos`);
+      if (!res.ok) throw new Error();
+      const produtos = await res.json();
+      const porCategoria = { Flores: [], Chocolates: [], Presentes: [], Cartões: [] };
+      produtos.forEach(p => {
+        const cat = p.categoria_nome;
+        if (cat === 'Flores') porCategoria.Flores.push(p);
+        else if (cat === 'Chocolates') porCategoria.Chocolates.push(p);
+        else if (cat === 'Presentes') porCategoria.Presentes.push(p);
+        else if (cat === 'Cartões') porCategoria.Cartões.push(p);
+      });
+      renderizarProdutos(porCategoria);
+    } catch (e) {
+      console.error(e);
+      document.querySelectorAll('.cardapio-grid').forEach(g => g.innerHTML = '<p style="padding:24px">❌ Erro ao carregar produtos</p>');
+    }
+  }
+
+  function renderizarProdutos(porCategoria) {
+    const mapping = { Flores: 'tab-flores', Chocolates: 'tab-chocolates', Presentes: 'tab-presentes', Cartões: 'tab-cartoes' };
+    for (let [cat, gridId] of Object.entries(mapping)) {
+      const grid = document.getElementById(gridId);
+      if (!grid) continue;
+      const lista = porCategoria[cat] || [];
+      if (lista.length === 0) { grid.innerHTML = '<p style="padding:20px">✨ Em breve</p>'; continue; }
+      let html = '';
+      for (let prod of lista) {
+        html += `<div class="item-card">
+          <span class="item-emoji">${prod.emoji || '🌸'}</span>
+          <div class="item-name">${escapeHtml(prod.nome)}</div>
+          <p class="item-desc">${escapeHtml(prod.descricao || '')}</p>
+          <div class="item-footer">
+            <span class="item-price">R$ ${Number(prod.preco).toFixed(2).replace('.',',')}${prod.tag ? `<span class="item-tag">${escapeHtml(prod.tag)}</span>` : ''}</span>
+            <button class="btn-add" data-id="${prod.id}" data-name="${escapeHtml(prod.nome)}" data-emoji="${prod.emoji || '🌸'}" data-price="${prod.preco}">+ Pedir</button>
+          </div>
+        </div>`;
+      }
+      grid.innerHTML = html;
+      grid.querySelectorAll('.btn-add').forEach(btn => {
+        btn.addEventListener('click', () => {
+          addToCart(parseInt(btn.dataset.id), btn.dataset.name, btn.dataset.emoji, parseFloat(btn.dataset.price));
+        });
+      });
+    }
+  }
+
+  // ---------- WHATSAPP (FALLBACK ROBUSTO) ----------
+  async function sendWhatsApp() {
+    const keys = Object.keys(cart);
+    if (keys.length === 0) { alert('Carrinho vazio'); return; }
+    if (!enderecoEntrega) { alert('Informe o endereço de entrega.'); openEntregaModal(); return; }
+
+    let nome = clienteInfo?.nome || '';
+    let telefone = clienteInfo?.telefone || '';
+    if (!nome) nome = prompt('Seu nome completo:', '');
+    if (!nome?.trim()) return;
+    if (!telefone) telefone = prompt('WhatsApp com DDD (apenas números):', '(16)');
+    if (!telefone?.trim()) return;
+    const mensagemCartao = prompt('💌 Mensagem para o cartão (opcional):', '') || '';
+    clienteInfo = { nome: nome.trim(), telefone: telefone.trim() };
+
+    const btn = document.getElementById('btn-finalizar');
+    const originalText = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '⏳ Enviando...';
+
+    const produtosPedido = keys.map(id => ({ produto_id: parseInt(id), quantidade: cart[id].qty }));
+    const pedidoData = {
+      cliente: { nome: nome.trim(), telefone: telefone.trim(), email: null },
+      local_entrega: enderecoEntrega,
+      produtos: produtosPedido,
+      observacao: document.getElementById('cart-obs').value || null,
+      mensagem_cartao: mensagemCartao || null
+    };
+
+    try {
+      const response = await fetch(`${API_BASE}/api/pedido`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(pedidoData)
+      });
+      const result = await response.json();
+      if (result.success && result.whatsapp_message) {
+        const numero = result.whatsapp_number;
+        const msg = encodeURIComponent(result.whatsapp_message);
+        window.open(`https://wa.me/${numero}?text=${msg}`, '_blank');
+        cart = {}; updateCartUI(); closeCart();
+        showToast(`✅ Pedido #${result.pedido?.codigo || ''} enviado!`);
+      } else {
+        // FALLBACK: mensagem local completa
+        const numeroWhatsApp = "5516993117529"; // Substitua pelo número real da loja
+        let itensTexto = '';
+        let subtotal = 0;
+        for (let id of keys) {
+          const item = cart[id];
+          subtotal += item.price * item.qty;
+          itensTexto += `\n🌿 *${item.name}* × ${item.qty} — R$ ${(item.price * item.qty).toFixed(2).replace('.',',')}`;
+        }
+        const freteGratis = subtotal >= 100;
+        const end = enderecoEntrega;
+        const enderecoStr = `${end.logradouro}, ${end.numero} - ${end.bairro}, ${end.cidade} - ${end.estado}, CEP: ${end.cep} ${end.referencia ? `(Ref: ${end.referencia})` : ''}`;
+        const observacao = document.getElementById('cart-obs').value ? `\n📝 *Observação:* ${document.getElementById('cart-obs').value}` : '';
+        const cartaoMsg = mensagemCartao ? `\n💌 *Mensagem no cartão:* "${mensagemCartao}"` : '';
+        const mensagemFinal = `*FLORES BRASIL - NOVO PEDIDO* 🌸\n\n*Código:* #${Math.random().toString(36).substring(2,10).toUpperCase()}\n*Status:* Pendente\n\n*🛍️ ITENS DO PEDIDO:*${itensTexto}\n\n*💰 Resumo:*\nSubtotal: R$ ${subtotal.toFixed(2).replace('.',',')}\nEntrega: *${freteGratis ? 'GRÁTIS' : 'A calcular'}*\n*TOTAL: R$ ${subtotal.toFixed(2).replace('.',',')}*${cartaoMsg}${observacao}\n\n*📍 Endereço de entrega:*\n${enderecoStr}\n\n*👤 Cliente:* ${nome.trim()}\n*📞 Telefone:* ${telefone.trim()}`;
+        const msgEncoded = encodeURIComponent(mensagemFinal);
+        window.open(`https://wa.me/${numeroWhatsApp}?text=${msgEncoded}`, '_blank');
+        cart = {}; updateCartUI(); closeCart();
+        showToast(`✅ Pedido enviado!`);
+      }
+    } catch (err) {
+      console.error(err);
+      alert('Erro de conexão. Tente novamente.');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = originalText;
+    }
+  }
+
+  // ---------- ENDEREÇO ----------
+  function openEntregaModal() { document.getElementById('entrega-overlay').classList.add('open'); document.body.style.overflow = 'hidden'; }
+  function closeEntregaModal() { document.getElementById('entrega-overlay').classList.remove('open'); document.body.style.overflow = ''; }
+  function saveEndereco() {
+    const logr = document.getElementById('e-logradouro').value.trim();
+    const bairro = document.getElementById('e-bairro').value.trim();
+    if (!logr || !bairro) { alert('Preencha logradouro e bairro.'); return; }
+    enderecoEntrega = {
+      logradouro: logr,
+      numero: document.getElementById('e-numero').value.trim() || 'S/N',
+      complemento: document.getElementById('e-complemento').value.trim() || null,
+      bairro: bairro,
+      cidade: document.getElementById('e-cidade').value.trim() || 'Franca',
+      estado: document.getElementById('e-estado').value.trim() || 'SP',
+      cep: document.getElementById('e-cep').value.trim() || '',
+      referencia: document.getElementById('e-referencia').value.trim() || null
+    };
+    closeEntregaModal();
+    showToast('📍 Endereço salvo!');
+  }
+
+  // ---------- TABS, DRAWER ----------
+  function setTab(btn, tabId) {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    btn.classList.add('active');
+    document.querySelectorAll('.cardapio-grid').forEach(g => g.style.display = 'none');
+    document.getElementById(`tab-${tabId}`).style.display = 'grid';
+  }
+  function openCart() { cartDrawer.classList.add('open'); cartOverlay.classList.add('open'); document.body.style.overflow = 'hidden'; }
+  function closeCart() { cartDrawer.classList.remove('open'); cartOverlay.classList.remove('open'); document.body.style.overflow = ''; }
+
+  // ---------- INIT ----------
+  document.addEventListener('DOMContentLoaded', () => {
+    carregarProdutos();
+    updateCartUI();
+
+    document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => setTab(t, t.dataset.tab)));
+    cartFab.addEventListener('click', openCart);
+    document.getElementById('close-drawer-btn').addEventListener('click', closeCart);
+    cartOverlay.addEventListener('click', closeCart);
+    document.getElementById('open-entrega-btn').addEventListener('click', openEntregaModal);
+    document.getElementById('salvar-endereco').addEventListener('click', saveEndereco);
+    document.getElementById('cancelar-endereco').addEventListener('click', closeEntregaModal);
+    document.getElementById('btn-finalizar').addEventListener('click', sendWhatsApp);
+
+    window.addEventListener('scroll', () => document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50));
+    const obs = new IntersectionObserver(e => e.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); obs.unobserve(e.target); } }), { threshold: 0.1 });
+    document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') { closeCart(); closeEntregaModal(); } });
+  });
+</script>
+</body>
+</html>

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin — Flores Brasil</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, sans-serif;
+      background: #faf3e8;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    h1 {
+      color: #2d1f14;
+      font-family: 'Cormorant Garamond', Georgia, serif;
+    }
+    table {
+      width: 100%;
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid #eee;
+    }
+    th {
+      background: #c4877a;
+      color: white;
+      font-weight: 600;
+    }
+    tr:last-child td {
+      border-bottom: none;
+    }
+    tr:hover td {
+      background: #fff9f2;
+    }
+    .status {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    /* BUG FIX: status com espaços (ex: "Saiu para Entrega") gerava classe CSS inválida.
+       Agora os seletores cobrem todos os valores possíveis sem depender de replace no template. */
+    .status-pendente          { background: #ffd700; color: #333; }
+    .status-confirmado        { background: #4caf50; color: white; }
+    .status-preparando        { background: #ff9800; color: white; }
+    .status-saiu-para-entrega { background: #2196f3; color: white; }
+    .status-entregue          { background: #3f51b5; color: white; }
+    .status-cancelado         { background: #f44336; color: white; }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: #999;
+    }
+
+    /* Seletor de status no painel */
+    select.status-select {
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 13px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🌸 Flores Brasil — Painel Administrativo</h1>
+    <h2>Últimos Pedidos</h2>
+
+    {% if pedidos %}
+    <table>
+      <thead>
+        <tr>
+          <th>Código</th>
+          <th>Cliente</th>
+          <th>Telefone</th>
+          <th>Total</th>
+          <th>Status</th>
+          <th>Data</th>
+          <th>Ação</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for pedido in pedidos %}
+        <tr>
+          <td><strong>#{{ pedido.codigo }}</strong></td>
+
+          {# BUG FIX: cliente pode ser None em casos de dados corrompidos — uso de filtro seguro #}
+          <td>{{ pedido.cliente.nome if pedido.cliente else '—' }}</td>
+          <td>{{ pedido.cliente.telefone if pedido.cliente else '—' }}</td>
+
+          <td>R$ {{ "%.2f"|format(pedido.total) }}</td>
+
+          {# BUG FIX: status com espaços (ex: "Saiu para Entrega") produzia classe inválida.
+             Corrigido com replace(' ', '-') para gerar slug CSS válido. #}
+          <td>
+            <span class="status status-{{ pedido.status | lower | replace(' ', '-') }}">
+              {{ pedido.status }}
+            </span>
+          </td>
+
+          <td>{{ pedido.data_pedido.strftime('%d/%m/%Y %H:%M') }}</td>
+
+          {# MELHORIA: seletor inline de status para atualização rápida via JS #}
+          <td>
+            <select class="status-select" data-id="{{ pedido.id }}" onchange="atualizarStatus(this)">
+              {% for s in ['Pendente', 'Confirmado', 'Preparando', 'Saiu para Entrega', 'Entregue', 'Cancelado'] %}
+              <option value="{{ s }}" {% if pedido.status == s %}selected{% endif %}>{{ s }}</option>
+              {% endfor %}
+            </select>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+    <div class="empty-state">
+      <p>Nenhum pedido encontrado ainda. 🌷</p>
+    </div>
+    {% endif %}
+  </div>
+
+  <script>
+    /**
+     * Atualiza o status de um pedido via API ao mudar o seletor.
+     * @param {HTMLSelectElement} selectEl - Elemento <select> disparador
+     */
+    async function atualizarStatus(selectEl) {
+      const id = selectEl.dataset.id;
+      const novoStatus = selectEl.value;
+
+      try {
+        const res = await fetch(`/api/pedido/${id}/status`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: novoStatus })
+        });
+        const data = await res.json();
+
+        if (!data.success) {
+          alert('Erro ao atualizar status: ' + (data.error || 'desconhecido'));
+          // Reverter visualmente recarregando a página
+          location.reload();
+        }
+      } catch (err) {
+        console.error('Erro de rede:', err);
+        alert('Falha de conexão ao atualizar status.');
+        location.reload();
+      }
+    }
+  </script>
+</body>
+</html>
