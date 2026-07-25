@@ -1,0 +1,34 @@
+services:
+  - type: web
+    name: flores-brasil
+    runtime: python
+    plan: free
+    autoDeploy: false
+    buildCommand: pip install -r requirements.txt
+    startCommand: bash start.sh
+    healthCheckPath: /
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: flores-brasil-db
+          property: connectionString
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: WHATSAPP_NUMBER
+        sync: false
+      - key: ENTREGA_TAXA
+        value: "15.0"
+      - key: ENTREGA_GRATIS_ACIMA
+        value: "100.0"
+
+databases:
+  - name: flores-brasil-db
+    plan: free
+    databaseName: flores_brasil
+    user: flores_brasil
