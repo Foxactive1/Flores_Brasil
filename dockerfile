@@ -3,7 +3,6 @@
 FROM python:3.11-slim
 
 WORKDIR /app
-
 # Instala dependências do sistema (para SQLite, etc.)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
