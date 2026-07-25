@@ -1,33 +1,31 @@
 import os
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv('.env')
 
 class Config:
-    # 🔐 Segurança
     SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret-key")
-
-    # 📁 Base do projeto
     BASE_DIR = os.path.abspath(os.path.dirname(__file__))
-
-    # 📦 Diretório do banco (garante existência)
     INSTANCE_DIR = os.path.join(BASE_DIR, "instance")
     os.makedirs(INSTANCE_DIR, exist_ok=True)
 
-    # 🗄️ Banco de dados (FORÇADO SQLite para evitar erro no Pydroid)
-    DB_PATH = os.path.join(INSTANCE_DIR, "flores_brasil.db")
-    SQLALCHEMY_DATABASE_URI = f"sqlite:///{DB_PATH}"
+    # Database: suporta PostgreSQL via DATABASE_URL, fallback para SQLite
+    DATABASE_URL = os.environ.get("DATABASE_URL")
+    if DATABASE_URL:
+        SQLALCHEMY_DATABASE_URI = DATABASE_URL
+    else:
+        DB_PATH = os.path.join(INSTANCE_DIR, "flores_brasil.db")
+        SQLALCHEMY_DATABASE_URI = f"sqlite:///{DB_PATH}"
 
     SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SQLALCHEMY_ENGINE_OPTIONS = {"pool_pre_ping": True}
 
-    # ⚙️ Engine config (seguro para SQLite)
-    SQLALCHEMY_ENGINE_OPTIONS = {
-        "pool_pre_ping": True
-    }
-
-    # 📲 WhatsApp
+    # WhatsApp
     WHATSAPP_NUMBER = os.environ.get("WHATSAPP_NUMBER", "5516993117529")
 
-    # 🚚 Entrega
+    # Entrega
     ENTREGA_TAXA = float(os.environ.get("ENTREGA_TAXA", 15.0))
     ENTREGA_GRATIS_ACIMA = float(os.environ.get("ENTREGA_GRATIS_ACIMA", 100.0))
+
+    # Admin
+    ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin123")
