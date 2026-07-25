@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Resumo e pagamento do seu pedido — Flores Brasil.">
+  <meta name="theme-color" content="#faf3e8">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌸</text></svg>">
+  <title>Checkout - Flores Brasil</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
+</head>
+<body>
+  <a href="#conteudo" class="skip-link">Pular para o conteúdo</a>
+  <main id="conteudo" class="fb-container fb-container--narrow" style="padding-top: 32px; padding-bottom: 40px;">
+    <div class="fb-card">
+      <h1>🌸 Resumo do Pedido</h1>
+
+      <div class="gift-tag" style="margin-bottom: 16px;">
+        <span aria-hidden="true">🏷️</span>
+        <span class="gift-tag__code">#{{ pedido.codigo }}</span>
+      </div>
+
+      <div class="fb-row"><span class="label">Status</span><span class="value"><span class="status-badge status-{{ pedido.status | lower | replace(' ', '-') }}">{{ pedido.status }}</span></span></div>
+      <div class="fb-row"><span class="label">Cliente</span><span class="value">{{ pedido.cliente.nome if pedido.cliente else '—' }}</span></div>
+      <div class="fb-row"><span class="label">Telefone</span><span class="value">{{ pedido.cliente.telefone if pedido.cliente else '—' }}</span></div>
+
+      <div style="margin: 22px 0 8px;">
+        <h2 style="font-size: 1.1rem; border: none; padding: 0; margin-bottom: 10px;">🛍️ Itens</h2>
+        {% for item in pedido.itens %}
+        <div class="fb-row">
+          <span>{{ item.produto.emoji }} {{ item.produto.nome }} × {{ item.quantidade }}</span>
+          <span class="value">R$ {{ "%.2f"|format(item.preco_unitario * item.quantidade) }}</span>
+        </div>
+        {% endfor %}
+      </div>
+
+      <div style="border-top: 2px solid var(--linha); padding-top: 14px;">
+        <div class="fb-row"><span class="label">Subtotal</span><span class="value">R$ {{ "%.2f"|format(pedido.subtotal) }}</span></div>
+        <div class="fb-row"><span class="label">Taxa de entrega</span><span class="value">R$ {{ "%.2f"|format(pedido.taxa_entrega) }}</span></div>
+        <div class="fb-total">TOTAL: R$ {{ "%.2f"|format(pedido.total) }}</div>
+      </div>
+
+      <button type="button" class="btn btn--whatsapp btn--block" style="margin-top: 22px;" id="btn-pagar">💳 Finalizar Pagamento</button>
+      <a href="/" class="btn btn--outline btn--block" style="margin-top: 10px;">← Voltar à loja</a>
+    </div>
+  </main>
+
+  <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+  <script>
+    document.getElementById('btn-pagar').addEventListener('click', function () {
+      FB.confirmModal('Em produção, esta etapa integrará com o Mercado Pago. Deseja simular o pagamento agora?', {
+        title: '💳 Pagamento simulado',
+        okLabel: 'Simular pagamento'
+      });
+    });
+  </script>
+</body>
+</html>

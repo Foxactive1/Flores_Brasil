@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#faf3e8">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌸</text></svg>">
+  <title>Pedidos - Admin</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
+</head>
+<body>
+  <div class="fb-container" style="padding-top: 24px; padding-bottom: 40px;">
+    <header class="fb-row" style="border-bottom: 2px solid var(--linha); padding-bottom: 16px; margin-bottom: 24px;">
+      <h1 style="border: none; padding: 0; font-size: 1.6rem;">📦 Pedidos</h1>
+      <a href="{{ url_for('main.admin_dashboard') }}" class="btn btn--outline btn--sm">← Painel</a>
+    </header>
+
+    {% if pedidos.items %}
+    <div class="fb-table-wrap">
+      <table class="fb-table">
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th>Cliente</th>
+            <th>Telefone</th>
+            <th>Total</th>
+            <th>Status</th>
+            <th>Data</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for pedido in pedidos.items %}
+          <tr>
+            <td data-label="Código"><span class="gift-tag" style="padding:4px 12px; font-size:0.95rem;">#{{ pedido.codigo }}</span></td>
+            <td data-label="Cliente">{{ pedido.cliente.nome if pedido.cliente else '—' }}</td>
+            <td data-label="Telefone">{{ pedido.cliente.telefone if pedido.cliente else '—' }}</td>
+            <td data-label="Total">R$ {{ "%.2f"|format(pedido.total) }}</td>
+            <td data-label="Status">
+              <span class="status-badge status-{{ pedido.status | lower | replace(' ', '-') }}">{{ pedido.status }}</span>
+            </td>
+            <td data-label="Data">{{ pedido.data_pedido.strftime('%d/%m/%Y %H:%M') }}</td>
+            <td data-label="Ações">
+              <a href="{{ url_for('main.admin_pedido_detalhe', codigo=pedido.codigo) }}" class="btn btn--ghost btn--sm">Detalhes</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="fb-pagination">
+      <span>Página {{ pedidos.page }} de {{ pedidos.pages }}</span>
+      <div>
+        {% if pedidos.has_prev %}
+          <a href="{{ url_for('main.admin_pedidos', pagina=pedidos.prev_num) }}">« Anterior</a>
+        {% endif %}
+        {% if pedidos.has_next %}
+          <a href="{{ url_for('main.admin_pedidos', pagina=pedidos.next_num) }}">Próxima »</a>
+        {% endif %}
+      </div>
+    </div>
+    {% else %}
+    <div class="fb-empty">
+      <span class="fb-empty__emoji">🌸</span>
+      <div class="fb-empty__title">Nenhum pedido encontrado ainda</div>
+    </div>
+    {% endif %}
+  </div>
+</body>
+</html>

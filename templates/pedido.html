@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Acompanhe os detalhes do seu pedido — Flores Brasil.">
+  <meta name="theme-color" content="#faf3e8">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌸</text></svg>">
+  <title>Pedido #{{ pedido.codigo }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
+</head>
+<body>
+  <a href="#conteudo" class="skip-link">Pular para o conteúdo</a>
+  <main id="conteudo" class="fb-container fb-container--narrow" style="padding-top: 32px; padding-bottom: 40px;">
+    <div class="fb-card">
+      <h1 style="display:flex; align-items:center; gap:12px; flex-wrap:wrap;">
+        <span>🌸 Pedido</span>
+        <span class="gift-tag"><span aria-hidden="true">🏷️</span><span class="gift-tag__code">#{{ pedido.codigo }}</span></span>
+      </h1>
+
+      <div class="fb-row">
+        <span class="label">Status</span>
+        <span class="status-badge status-{{ pedido.status | lower | replace(' ', '-') }}">{{ pedido.status }}</span>
+      </div>
+      <div class="fb-row"><span class="label">Data</span><span class="value">{{ pedido.data_pedido.strftime('%d/%m/%Y %H:%M') }}</span></div>
+      <div class="fb-row"><span class="label">Cliente</span><span class="value">{{ pedido.cliente.nome if pedido.cliente else '—' }}</span></div>
+
+      <div style="margin: 22px 0 8px;">
+        <h2 style="font-size: 1.1rem; border: none; padding: 0; margin-bottom: 10px;">🛍️ Itens</h2>
+        {% for item in pedido.itens %}
+        <div class="fb-row">
+          <span>{{ item.produto.emoji }} {{ item.produto.nome }} × {{ item.quantidade }}</span>
+          <span class="value">R$ {{ "%.2f"|format(item.preco_unitario * item.quantidade) }}</span>
+        </div>
+        {% endfor %}
+      </div>
+
+      <div style="border-top: 2px solid var(--linha); padding-top: 14px;">
+        <div class="fb-row"><span class="label">Subtotal</span><span class="value">R$ {{ "%.2f"|format(pedido.subtotal) }}</span></div>
+        <div class="fb-row"><span class="label">Taxa de entrega</span><span class="value">R$ {{ "%.2f"|format(pedido.taxa_entrega) }}</span></div>
+        <div class="fb-total">TOTAL: R$ {{ "%.2f"|format(pedido.total) }}</div>
+      </div>
+
+      {% if pedido.mensagem_cartao %}
+      <div style="margin-top: 20px; background: var(--creme); padding: 16px; border-radius: var(--radius-md); border-left: 4px solid var(--ouro);">
+        <strong>💌 Mensagem no cartão:</strong>
+        <p style="font-style:italic; margin-top:4px;">{{ pedido.mensagem_cartao }}</p>
+      </div>
+      {% endif %}
+
+      <div style="margin-top: 24px; text-align: center;">
+        <a href="/" class="btn btn--primary">← Voltar à loja</a>
+      </div>
+    </div>
+  </main>
+</body>
+</html>

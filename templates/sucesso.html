@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Pagamento confirmado — Flores Brasil.">
+  <meta name="theme-color" content="#faf3e8">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌸</text></svg>">
+  <title>Pagamento confirmado!</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
+</head>
+<body>
+  <main class="fb-page-center" role="main">
+    <div class="fb-container--narrow" style="text-align: center;">
+      <span style="font-size: 4rem; display: block; margin-bottom: 10px;" aria-hidden="true">🎉</span>
+      <h1 style="font-size: 2rem; margin-bottom: 10px;">Pagamento confirmado!</h1>
+      <p style="color: var(--seco); font-size: 1.05rem;">
+        Seu pedido
+        <span class="gift-tag" style="font-size: 1rem; padding: 4px 14px;"><span class="gift-tag__code">#{{ codigo }}</span></span>
+        foi aprovado.<br>Em breve você receberá a confirmação por WhatsApp.
+      </p>
+      <p style="font-size: 0.9rem; color: var(--seco-light); margin-top: 12px;">Obrigado por comprar na Flores Brasil 🌸</p>
+      <a href="/" class="btn btn--primary" style="margin-top: 24px;">Voltar à loja</a>
+    </div>
+  </main>
+</body>
+</html>

@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#faf3e8">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌸</text></svg>">
+  <title>Métricas da IA</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
+  <style>
+    .metric { display: flex; justify-content: space-between; padding: 14px 0; border-bottom: 1px solid var(--linha-suave); }
+    .metric:last-child { border-bottom: none; }
+    .metric .label { font-weight: 600; color: var(--seco); }
+    .metric .value { font-weight: 700; color: var(--ink); }
+  </style>
+</head>
+<body>
+  <div class="fb-container fb-container--md" style="padding-top: 24px; padding-bottom: 40px;">
+    <header class="fb-row" style="border-bottom: 2px solid var(--linha); padding-bottom: 16px; margin-bottom: 24px;">
+      <h1 style="border: none; padding: 0; font-size: 1.6rem;">🤖 Métricas da IA (Parser)</h1>
+      <a href="{{ url_for('main.admin_dashboard') }}" class="btn btn--outline btn--sm">← Painel</a>
+    </header>
+
+    <div class="fb-card">
+      {% if metrics.error %}
+        <p style="color: var(--erro);" role="alert">{{ metrics.error }}</p>
+      {% else %}
+        <div class="metric"><span class="label">Total de chamadas</span><span class="value">{{ metrics.total_chamadas or 0 }}</span></div>
+        <div class="metric"><span class="label">Sucessos</span><span class="value">{{ metrics.sucessos or 0 }}</span></div>
+        <div class="metric"><span class="label">Erros</span><span class="value">{{ metrics.erros or 0 }}</span></div>
+        <div class="metric"><span class="label">Taxa de sucesso</span><span class="value">{{ metrics.taxa_sucesso or 0 }}%</span></div>
+        <div class="metric"><span class="label">Tempo médio de resposta</span><span class="value">{{ metrics.tempo_medio_resposta or '—' }} segundos</span></div>
+      {% endif %}
+    </div>
+  </div>
+</body>
+</html>

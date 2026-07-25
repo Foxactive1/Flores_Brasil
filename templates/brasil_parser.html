@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="robots" content="noindex, nofollow"/>
+  <meta name="theme-color" content="#241811"/>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌸</text></svg>">
+  <title>Flores Brasil · Parser de Pedidos</title>
+
+  <!-- Bootstrap 5 -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.2/css/bootstrap.min.css" rel="stylesheet"/>
+  <!-- Bootstrap Icons -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-icons/1.11.3/font/bootstrap-icons.min.css" rel="stylesheet"/>
+  <!-- Google Fonts — mesma dupla tipográfica da loja e do painel admin -->
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Nunito:wght@300;400;600;700&display=swap" rel="stylesheet"/>
+
+<style>
+  /* Paleta unificada com o resto do site (loja + admin).
+     --verde é mantido como acento de "pagamento confirmado" (PIX),
+     mas agora deriva da mesma família de cor do painel administrativo. */
+  :root {
+    --verde:       #241811;
+    --verde-med:   #3a4a2f;
+    --verde-claro: #2e6b47;
+    --ouro:        #c9a84c;
+    --ouro-claro:  #f0d080;
+    --creme:       #faf3e8;
+    --rose:        #fdf0ec;
+    --rose-med:    #e8b4a2;
+    --cinza:       #7a5b4b;
+    --borda:       #e4ddd0;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--creme);
+    background-image:
+      radial-gradient(ellipse at 10% 0%, rgba(46,139,87,0.10) 0%, transparent 60%),
+      radial-gradient(ellipse at 90% 100%, rgba(201,168,76,0.08) 0%, transparent 60%);
+    min-height: 100vh;
+    color: #1a1a1a;
+  }
+
+  .app-header {
+    background: var(--verde);
+    padding: 22px 0 18px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .app-header::before {
+    content: '🌸';
+    position: absolute;
+    font-size: 120px;
+    opacity: 0.05;
+    left: -20px; top: -20px;
+    user-select: none;
+  }
+  .app-header::after {
+    content: '🌹';
+    position: absolute;
+    font-size: 100px;
+    opacity: 0.05;
+    right: -10px; bottom: -20px;
+    user-select: none;
+  }
+
+  .app-header .badge-tag {
+    display: inline-block;
+    background: rgba(201,168,76,0.2);
+    color: var(--ouro-claro);
+    border: 1px solid rgba(201,168,76,0.4);
+    padding: 3px 14px;
+    border-radius: 50px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  .app-header h1 {
+    font-family: 'Cormorant Garamond', serif;
+    color: #fff;
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: 1px;
+  }
+
+  .app-header p {
+    color: rgba(255,255,255,0.55);
+    font-size: 13px;
+    margin: 5px 0 0;
+    font-weight: 300;
+  }
+
+  .panel {
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 3px 24px rgba(13,46,28,0.09);
+    padding: 22px 20px;
+    margin-bottom: 18px;
+    animation: fadeUp 0.45s ease both;
+  }
+
+  .panel-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--verde);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--borda);
+    margin-bottom: 16px;
+  }
+
+  .msg-textarea {
+    width: 100%;
+    min-height: 185px;
+    border: 2px solid var(--borda);
+    border-radius: 12px;
+    padding: 14px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 12.5px;
+    line-height: 1.7;
+    resize: vertical;
+    background: #fdfcfa;
+    color: #222;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .msg-textarea:focus { border-color: var(--verde-claro); }
+
+  .btn-parse {
+    background: var(--verde);
+    color: #fff;
+    border: none;
+    padding: 12px 22px;
+    border-radius: 11px;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+  }
+  .btn-parse:hover:not(:disabled) { background: var(--verde-med); transform: translateY(-1px); box-shadow: 0 4px 14px rgba(13,46,28,0.25); }
+  .btn-parse:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  .btn-limpar, .btn-paste {
+    background: transparent;
+    color: var(--cinza);
+    border: 1.5px solid var(--borda);
+    padding: 12px 16px;
+    border-radius: 11px;
+    font-family: 'Nunito', sans-serif;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-limpar:hover, .btn-paste:hover { border-color: var(--verde-claro); color: var(--verde); }
+
+  .spin {
+    width: 16px; height: 16px;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+    display: inline-block;
+  }
+
+  .info-chip {
+    background: #f7f5f0;
+    border-left: 3px solid var(--verde-claro);
+    border-radius: 10px;
+    padding: 10px 13px;
+    margin-bottom: 10px;
+  }
+
+  .info-chip.gold { border-left-color: var(--ouro); background: #fdf8ee; }
+  .info-chip.rose { border-left-color: var(--rose-med); background: var(--rose); }
+
+  .chip-label {
+    font-size: 9.5px;
+    font-weight: 700;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--cinza);
+    margin-bottom: 3px;
+  }
+
+  .chip-value {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: #1a1a1a;
+    word-break: break-word;
+  }
+
+  .item-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--rose);
+    border-radius: 10px;
+    padding: 10px 14px;
+    margin-bottom: 8px;
+    font-size: 13.5px;
+  }
+  .item-line .item-name { font-weight: 600; }
+  .item-line .item-price { font-weight: 700; color: var(--verde-med); }
+
+  .total-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--verde);
+    color: #fff;
+    padding: 14px 16px;
+    border-radius: 12px;
+    font-weight: 700;
+    font-size: 16px;
+    margin-top: 12px;
+  }
+
+  .status-badge {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    padding: 4px 11px;
+    border-radius: 50px;
+    background: #fff8e0;
+    color: #b8860b;
+    border: 1px solid #f0d080;
+    margin-left: auto;
+  }
+
+  .pay-tabs {
+    display: flex;
+    gap: 6px;
+    background: #f0ebe0;
+    padding: 5px;
+    border-radius: 13px;
+    margin-bottom: 20px;
+  }
+
+  .pay-tab {
+    flex: 1;
+    padding: 10px 8px;
+    border: none;
+    border-radius: 9px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: var(--cinza);
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+  }
+  .pay-tab.active {
+    background: #fff;
+    color: var(--verde);
+    box-shadow: 0 2px 10px rgba(13,46,28,0.12);
+  }
+
+  .pay-panel { display: none; }
+  .pay-panel.active { display: block; animation: fadeUp 0.3s ease; }
+
+  .qr-mock {
+    width: 150px; height: 150px;
+    margin: 0 auto 14px;
+    background:
+      repeating-linear-gradient(0deg,   #000 0,#000 3px,transparent 3px,transparent 9px),
+      repeating-linear-gradient(90deg,  #000 0,#000 3px,transparent 3px,transparent 9px);
+    border: 4px solid #000;
+    border-radius: 10px;
+    opacity: 0.85;
+    position: relative;
+  }
+  .qr-mock::after {
+    content: 'PIX';
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--verde);
+    background: rgba(255,255,255,0.92);
+    border-radius: 6px;
+    margin: 28px;
+  }
+
+  .pix-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    padding: 7px 0;
+    border-bottom: 1px solid var(--borda);
+  }
+  .pix-row:last-child { border-bottom: none; }
+  .pix-row .lbl { color: var(--cinza); }
+  .pix-row .val { font-weight: 700; }
+
+  .copia-cola-box {
+    background: #f0f9f4;
+    border: 1.5px solid var(--verde-claro);
+    border-radius: 10px;
+    padding: 11px 13px;
+    font-family: monospace;
+    font-size: 10.5px;
+    color: var(--verde);
+    word-break: break-all;
+    margin: 14px 0 12px;
+  }
+
+  .barras {
+    height: 52px;
+    border-radius: 5px;
+    margin: 14px 0;
+    background: repeating-linear-gradient(
+      90deg,
+      #000 0, #000 2px,
+      transparent 2px, transparent 4px,
+      #000 4px, #000 6px,
+      transparent 6px, transparent 9px,
+      #000 9px, #000 10px,
+      transparent 10px, transparent 14px
+    );
+    opacity: 0.75;
+  }
+
+  .boleto-code-box {
+    background: #f5f5f0;
+    border-radius: 9px;
+    padding: 11px 13px;
+    font-family: monospace;
+    font-size: 11px;
+    text-align: center;
+    word-break: break-all;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+    color: #333;
+  }
+
+  .link-box {
+    background: #f0f9f4;
+    border: 1.5px solid var(--verde-claro);
+    border-radius: 10px;
+    padding: 13px;
+    font-family: monospace;
+    font-size: 11.5px;
+    word-break: break-all;
+    color: var(--verde-med);
+    margin-bottom: 14px;
+    line-height: 1.6;
+  }
+
+  .btn-copy {
+    width: 100%;
+    background: #f0f9f4;
+    color: var(--verde);
+    border: 1.5px solid var(--verde-claro);
+    padding: 11px 16px;
+    border-radius: 10px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    margin-bottom: 8px;
+  }
+  .btn-copy:hover { background: var(--verde); color: #fff; }
+
+  .btn-wpp {
+    width: 100%;
+    background: #25D366;
+    color: #fff;
+    border: none;
+    padding: 13px 16px;
+    border-radius: 10px;
+    font-family: 'Nunito', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .btn-wpp:hover { background: #1da851; }
+
+  .toast-copied {
+    display: none;
+    position: fixed;
+    bottom: 28px; left: 50%;
+    transform: translateX(-50%);
+    background: var(--verde);
+    color: #fff;
+    padding: 11px 24px;
+    border-radius: 50px;
+    font-size: 13px;
+    font-weight: 700;
+    box-shadow: 0 6px 24px rgba(13,46,28,0.3);
+    z-index: 9999;
+    white-space: nowrap;
+    animation: toastIn 0.3s ease;
+  }
+
+  .erro-box {
+    background: #fff0f0;
+    border: 1.5px solid #ffb3b3;
+    color: #c0392b;
+    padding: 14px;
+    border-radius: 12px;
+    font-size: 13px;
+    text-align: center;
+    margin-bottom: 16px;
+    animation: fadeUp 0.3s ease;
+  }
+
+  .app-footer {
+    text-align: center;
+    font-size: 11px;
+    color: var(--cinza);
+    padding: 12px 0 24px;
+    opacity: 0.7;
+  }
+
+  @keyframes fadeUp   { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
+  @keyframes spin     { to { transform:rotate(360deg); } }
+  @keyframes toastIn  { from { opacity:0; transform:translateX(-50%) translateY(10px); } to { opacity:1; transform:translateX(-50%) translateY(0); } }
+</style>
+</head>
+<body>
+
+<a href="#conteudo" class="visually-hidden-focusable">Pular para o conteúdo</a>
+<div class="app-header mb-3">
+  <a href="{{ url_for('main.admin_dashboard') }}" style="position:absolute; left:16px; top:16px; color:rgba(255,255,255,0.7); text-decoration:none; font-size:13px; z-index:1;">← Painel</a>
+  <div class="badge-tag">🌸 InNovaIdeia · Flores Brasil</div>
+  <h1>Parser de Pedidos</h1>
+  <p>WhatsApp → IA → Pagamento automático</p>
+</div>
+
+<div class="container" id="conteudo" style="max-width:520px;">
+
+  <!-- Painel de entrada -->
+  <div class="panel">
+    <div class="panel-title">
+      <i class="bi bi-whatsapp text-success"></i> Mensagem do WhatsApp
+    </div>
+    <textarea id="msgInput" class="msg-textarea"
+      placeholder="Cole aqui a mensagem do pedido recebida no WhatsApp..."></textarea>
+    <div class="d-flex gap-2 mt-3">
+      <button class="btn-parse" id="btnParse" onclick="parsearMensagem()">
+        <i class="bi bi-cpu"></i> Reconhecer Pedido
+      </button>
+      <button class="btn-paste" id="btnPaste" onclick="colarDaAreaTransferencia()">
+        <i class="bi bi-clipboard-data"></i> Colar
+      </button>
+      <button class="btn-limpar" onclick="limpar()">
+        <i class="bi bi-x-lg"></i> Limpar
+      </button>
+    </div>
+  </div>
+
+  <div id="erroBox" class="erro-box" style="display:none;"></div>
+
+  <div id="resultado" style="display:none;">
+    <div class="panel" id="panelPedido">
+      <div class="panel-title">
+        <i class="bi bi-box-seam"></i> Pedido Reconhecido
+        <span class="status-badge" id="statusBadge">Pendente</span>
+      </div>
+
+      <div class="row g-2 mb-2">
+        <div class="col-6">
+          <div class="info-chip">
+            <div class="chip-label">Código</div>
+            <div class="chip-value" id="infoCodigo" style="font-family:monospace;font-size:13px;">—</div>
+          </div>
+        </div>
+        <div class="col-6">
+          <div class="info-chip">
+            <div class="chip-label">Cliente</div>
+            <div class="chip-value" id="infoCliente">—</div>
+          </div>
+        </div>
+        <div class="col-6">
+          <div class="info-chip">
+            <div class="chip-label">Telefone</div>
+            <div class="chip-value" id="infoTel">—</div>
+          </div>
+        </div>
+        <div class="col-6">
+          <div class="info-chip" id="chipEntrega">
+            <div class="chip-label">Entrega</div>
+            <div class="chip-value" id="infoEntrega">—</div>
+          </div>
+        </div>
+        <div class="col-12">
+          <div class="info-chip">
+            <div class="chip-label"><i class="bi bi-geo-alt-fill me-1"></i>Endereço</div>
+            <div class="chip-value" id="infoEndereco">—</div>
+          </div>
+        </div>
+        <div class="col-12" id="cardCartao" style="display:none;">
+          <div class="info-chip gold">
+            <div class="chip-label">💌 Mensagem no Cartão</div>
+            <div class="chip-value" id="infoCartao" style="font-style:italic;">—</div>
+          </div>
+        </div>
+      </div>
+
+      <div id="listaItens"></div>
+
+      <div class="total-bar">
+        <span>💰 TOTAL DO PEDIDO</span>
+        <span id="totalValor" style="font-size:17px;">—</span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-title">
+        <i class="bi bi-credit-card-2-front"></i> Opções de Pagamento
+      </div>
+
+      <div class="pay-tabs">
+        <button class="pay-tab active" onclick="mudarTab('pix', this)"><span>🟢</span> PIX</button>
+        <button class="pay-tab" onclick="mudarTab('boleto', this)"><span>📄</span> Boleto</button>
+        <button class="pay-tab" onclick="mudarTab('link', this)"><span>🔗</span> Link</button>
+      </div>
+
+      <div id="tabPix" class="pay-panel active">
+        <div style="text-align:center;"><div class="qr-mock"></div></div>
+        <div id="pixInfos"></div>
+        <div class="copia-cola-box" id="pixCopiaCola"></div>
+        <button class="btn-copy" onclick="copiarTexto('pixCopiaCola', 'PIX Copia e Cola')">
+          <i class="bi bi-clipboard"></i> Copiar PIX Copia e Cola
+        </button>
+        <button class="btn-wpp" onclick="copiarWpp('pix')">
+          <i class="bi bi-whatsapp"></i> Copiar Mensagem WhatsApp
+        </button>
+      </div>
+
+      <div id="tabBoleto" class="pay-panel">
+        <div class="text-center mb-1"><small class="text-muted" id="boletoVenc"></small></div>
+        <div class="barras"></div>
+        <div class="boleto-code-box" id="boletoCodigo"></div>
+        <div id="boletoInfos" class="mb-3"></div>
+        <button class="btn-copy" onclick="copiarTexto('boletoCodigo', 'Código do Boleto')">
+          <i class="bi bi-clipboard"></i> Copiar Código do Boleto
+        </button>
+        <button class="btn-wpp" onclick="copiarWpp('boleto')">
+          <i class="bi bi-whatsapp"></i> Copiar Mensagem WhatsApp
+        </button>
+      </div>
+
+      <div id="tabLink" class="pay-panel">
+        <div class="link-box" id="linkPagamento"></div>
+        <p class="text-center text-muted" style="font-size:12px;margin-bottom:14px;">
+          <i class="bi bi-clock me-1"></i>Link válido por 24h · Aceita cartão, PIX e boleto
+        </p>
+        <button class="btn-copy" onclick="copiarTexto('linkPagamento', 'Link de Pagamento')">
+          <i class="bi bi-clipboard"></i> Copiar Link
+        </button>
+        <button class="btn-wpp" onclick="copiarWpp('link')">
+          <i class="bi bi-whatsapp"></i> Copiar Mensagem WhatsApp
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-footer">
+    MVP · InNovaIdeia © 2025 · Pagamentos simulados · Powered by Groq AI
+  </div>
+</div>
+
+<div class="toast-copied" id="toastCopied">✅ Copiado!</div>
+
+<script>
+// -------------------- DADOS DE EXEMPLO --------------------
+const SAMPLE = `🌸 *FLORES BRASIL - NOVO PEDIDO* 🌸
+
+*Código:* #WD5NPSIE
+*Status:* Pendente
+
+*📦 ITENS DO PEDIDO:*
+🌹 *Buquê de Rosas* × 1 — R$ 89.00
+🌻 *Girassóis do Campo* × 1 — R$ 79.00
+
+*💰 Resumo:*
+Subtotal: R$ 168.00
+Entrega: *GRÁTIS* (acima de R$ 100.00)
+*TOTAL: R$ 168.00*
+
+💌 *Mensagem no cartão:*
+"hggy"
+
+📍 *Endereço de entrega:*
+Vergílio José Gomes, 2652 - Jardim Luiza1, Franca - SP, CEP: 14407553
+
+👤 *Cliente:* Leticia
+📞 *Telefone:* (16)993117529`;
+
+window.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('msgInput').value = SAMPLE;
+});
+
+let pedidoAtual = null;
+
+// -------------------- FUNÇÃO PRINCIPAL (usa rota do backend) --------------------
+async function parsearMensagem() {
+  const msg = document.getElementById('msgInput').value.trim();
+  document.getElementById('erroBox').style.display = 'none';
+
+  if (!msg) {
+    mostrarErro('⚠️ Cole uma mensagem de pedido antes de analisar.');
+    return;
+  }
+
+  setLoading(true);
+  document.getElementById('resultado').style.display = 'none';
+
+  try {
+    const res = await fetch('/api/parse-mensagem', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mensagem: msg })
+    });
+
+    const data = await res.json();
+
+    if (!data.success) {
+      throw new Error(data.error || 'Erro desconhecido');
+    }
+
+    // O backend retorna { success: true, pedido: {...}, meta: {...} }
+    const pedido = data.pedido;
+    pedidoAtual = pedido;
+
+    // Converte a estrutura do backend para o formato esperado pelo frontend
+    // --- CÁLCULO DO TOTAL A PARTIR DOS ITENS (fallback) ---
+let totalCalculado = null;
+if (pedido.total !== undefined && pedido.total !== null) {
+  totalCalculado = pedido.total;
+} else if (pedido.subtotal !== undefined && pedido.subtotal !== null) {
+  const entregaValor = pedido.entrega_valor || 0;
+  totalCalculado = pedido.subtotal + entregaValor;
+} else if (pedido.itens && pedido.itens.length > 0) {
+  totalCalculado = pedido.itens.reduce((acc, item) => {
+    const preco = item.preco_unitario || 0;
+    const qtd = item.qtd || 1;
+    return acc + (preco * qtd);
+  }, 0);
+}
+const totalFormatado = totalCalculado !== null
+  ? `R$ ${totalCalculado.toFixed(2).replace('.', ',')}`
+  : '—';
+
+// --- Construção do objeto p ---
+const p = {
+  codigo: pedido.codigo || '—',
+  status: pedido.status || 'Pendente',
+  cliente: pedido.cliente || '—',
+  telefone: pedido.telefone || '—',
+  endereco: pedido.endereco?.completo || '—',
+  mensagem_cartao: pedido.mensagem_cartao || null,
+  itens: (pedido.itens || []).map(item => ({
+    emoji: item.emoji || '🌸',
+    nome: item.nome || 'Item',
+    qtd: item.qtd || 1,
+    preco: item.preco_formatado || `R$ ${(item.preco_unitario || 0).toFixed(2).replace('.',',')}`
+  })),
+  subtotal: pedido.subtotal ? `R$ ${pedido.subtotal.toFixed(2).replace('.',',')}` : '—',
+  entrega: pedido.entrega || '—',
+  total: totalFormatado  // <--- agora sempre terá um valor
+};
+    renderPedido(p);
+    gerarPagamentos(p);
+    document.getElementById('resultado').style.display = 'block';
+
+    // Exibe avisos se houver
+    if (pedido.avisos && pedido.avisos.length > 0) {
+      mostrarErro('⚠️ Avisos: ' + pedido.avisos.join('; '));
+    }
+
+  } catch (e) {
+    mostrarErro(`❌ Erro: ${e.message}`);
+  } finally {
+    setLoading(false);
+  }
+}
+
+// -------------------- RENDERIZAÇÃO --------------------
+function renderPedido(p) {
+  document.getElementById('infoCodigo').textContent  = p.codigo;
+  document.getElementById('infoCliente').textContent = p.cliente;
+  document.getElementById('infoTel').textContent     = p.telefone;
+  document.getElementById('infoEndereco').textContent= p.endereco;
+  document.getElementById('statusBadge').textContent = p.status;
+  document.getElementById('totalValor').textContent  = p.total;
+
+  const entrega = p.entrega;
+  const infoEntrega = document.getElementById('infoEntrega');
+  infoEntrega.textContent = entrega;
+  infoEntrega.style.color = entrega.toLowerCase().includes('grátis') || entrega.toLowerCase().includes('gratis')
+    ? '#2e8b57' : '#1a1a1a';
+
+  const cardCartao = document.getElementById('cardCartao');
+  if (p.mensagem_cartao) {
+    document.getElementById('infoCartao').textContent = `"${p.mensagem_cartao}"`;
+    cardCartao.style.display = 'block';
+  } else {
+    cardCartao.style.display = 'none';
+  }
+
+  const lista = document.getElementById('listaItens');
+  lista.innerHTML = '';
+  (p.itens || []).forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'item-line';
+    div.innerHTML = `
+      <span class="item-name">${item.emoji} ${item.nome} × ${item.qtd}</span>
+      <span class="item-price">${item.preco}</span>
+    `;
+    lista.appendChild(div);
+  });
+}
+
+// -------------------- PAGAMENTOS SIMULADOS --------------------
+function gerarPagamentos(p) {
+  const total = p.total || 'R$ 0,00';
+  const val   = parseFloat(total.replace(/[^\d,]/g, '').replace(',', '.')) || 0;
+  const valStr = val.toFixed(2);
+  const txid  = `FB${Date.now().toString().slice(-8)}`;
+  const chave = 'innovaideia2023@gmail.com';
+
+  const copiaCola = `00020126580014BR.GOV.BCB.PIX0136${chave}5204000053039865406${valStr.replace('.', '')}5802BR5913FloresBrasil6006Franca62070503***6304${rand16()}`;
+  document.getElementById('pixCopiaCola').textContent = copiaCola;
+  document.getElementById('pixInfos').innerHTML = `
+    <div class="pix-row"><span class="lbl">Chave</span><span class="val">${chave}</span></div>
+    <div class="pix-row"><span class="lbl">Valor</span><span class="val">${total}</span></div>
+    <div class="pix-row"><span class="lbl">Beneficiário</span><span class="val">Flores Brasil</span></div>
+    <div class="pix-row"><span class="lbl">TxID</span><span class="val" style="font-family:monospace;font-size:11px;">${txid}</span></div>
+  `;
+
+  const r = () => Math.floor(Math.random() * 9000 + 1000);
+  const bCod = `34191.${r()} ${r()}.${r()} ${r()}.${r()} 1 ${r()}${r()}${r()}${r()}`;
+  const venc  = new Date(Date.now() + 3 * 86400000).toLocaleDateString('pt-BR');
+  document.getElementById('boletoCodigo').textContent = bCod;
+  document.getElementById('boletoVenc').innerHTML = `<i class="bi bi-calendar2-check"></i> Vencimento: <strong>${venc}</strong>`;
+  document.getElementById('boletoInfos').innerHTML = `
+    <div class="pix-row"><span class="lbl">Sacado</span><span class="val">${p.cliente || '—'}</span></div>
+    <div class="pix-row"><span class="lbl">Beneficiário</span><span class="val">Flores Brasil LTDA</span></div>
+    <div class="pix-row"><span class="lbl">Valor</span><span class="val">${total}</span></div>
+  `;
+
+  const codigoPedido = p.codigo || 'SEMCODIGO';
+  document.getElementById('linkPagamento').textContent =
+    `https://pay.floresbrasil.com.br/checkout/${codigoPedido}?valor=${encodeURIComponent(total)}`;
+}
+
+// -------------------- UTILITÁRIOS --------------------
+function mudarTab(nome, btn) {
+  document.querySelectorAll('.pay-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.pay-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab' + nome.charAt(0).toUpperCase() + nome.slice(1)).classList.add('active');
+}
+
+function copiarTexto(elementId, label) {
+  const el  = document.getElementById(elementId);
+  const txt = el.textContent || el.innerText;
+  navigator.clipboard.writeText(txt).then(() => showToast(`${label} copiado!`));
+}
+
+function copiarWpp(tipo) {
+  if (!pedidoAtual) return;
+  const p = pedidoAtual;
+  const chave = 'innovaideia2023@gmail.com';
+  const copiaCola = document.getElementById('pixCopiaCola').textContent;
+  const boletoCod = document.getElementById('boletoCodigo').textContent;
+  const link      = document.getElementById('linkPagamento').textContent;
+
+  let txt = '';
+  if (tipo === 'pix') {
+    txt = `Olá ${p.cliente}! 😊\n\nSeu pedido *${p.codigo}* está confirmado!\n\n*Pagamento via PIX:*\nChave: ${chave}\nValor: ${p.total}\n\nCód. PIX Copia e Cola:\n${copiaCola}\n\nApós o pagamento, envie o comprovante aqui. 🌸\n\n_Flores Brasil_`;
+  } else if (tipo === 'boleto') {
+    const venc = document.getElementById('boletoVenc').innerText.replace('Vencimento:', '').trim();
+    txt = `Olá ${p.cliente}! 😊\n\nSeu boleto do pedido *${p.codigo}*:\n\n*Código:*\n${boletoCod}\n\n*Vencimento:* ${venc}\n*Valor:* ${p.total}\n\n🌸 _Flores Brasil_`;
+  } else {
+    txt = `Olá ${p.cliente}! 😊\n\nFinalize o pagamento do pedido *${p.codigo}* pelo link:\n\n🔗 ${link}\n\n*Valor:* ${p.total}\n\nQualquer dúvida é só chamar! 🌸\n\n_Flores Brasil_`;
+  }
+  navigator.clipboard.writeText(txt).then(() => showToast('Mensagem WhatsApp copiada!'));
+}
+
+function rand16() {
+  return Math.random().toString(16).slice(2, 6).toUpperCase();
+}
+
+function setLoading(on) {
+  const btn = document.getElementById('btnParse');
+  btn.disabled = on;
+  btn.innerHTML = on
+    ? `<span class="spin"></span> Analisando...`
+    : `<i class="bi bi-cpu"></i> Reconhecer Pedido`;
+}
+
+function mostrarErro(msg) {
+  const box = document.getElementById('erroBox');
+  box.innerHTML = msg;
+  box.style.display = 'block';
+}
+
+let toastTimer = null;
+function showToast(msg) {
+  const t = document.getElementById('toastCopied');
+  t.textContent = `✅ ${msg}`;
+  t.style.display = 'block';
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.style.display = 'none'; }, 2200);
+}
+
+function limpar() {
+  document.getElementById('msgInput').value = '';
+  document.getElementById('resultado').style.display = 'none';
+  document.getElementById('erroBox').style.display = 'none';
+  pedidoAtual = null;
+}
+
+// Área de transferência
+async function colarDaAreaTransferencia() {
+  try {
+    const texto = await navigator.clipboard.readText();
+    if (!texto) {
+      mostrarErro("📋 Nada encontrado na área de transferência.");
+      return;
+    }
+    document.getElementById('msgInput').value = texto;
+    parsearMensagem();
+  } catch (err) {
+    mostrarErro("❌ Permissão negada para ler a área de transferência. Cole manualmente.");
+    console.error(err);
+  }
+}
+
+// Ativar parse ao colar (opcional)
+document.getElementById('msgInput').addEventListener('paste', () => {
+  setTimeout(parsearMensagem, 50);
+});
+</script>
+</body>
+</html>

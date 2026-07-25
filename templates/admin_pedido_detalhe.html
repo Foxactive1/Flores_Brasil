@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#faf3e8">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌸</text></svg>">
+  <title>Pedido #{{ pedido.codigo }}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
+  <style>
+    .update-form { margin-top: 22px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    .update-form select { width: auto; min-width: 200px; }
+  </style>
+</head>
+<body>
+  <div class="fb-container fb-container--md" style="padding-top: 24px; padding-bottom: 40px;">
+    <a href="{{ url_for('main.admin_pedidos') }}" class="btn btn--ghost btn--sm" style="margin-bottom: 20px;">← Voltar para lista</a>
+
+    <div class="fb-card">
+      <h1 style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; font-size:1.5rem;">
+        <span>Pedido</span>
+        <span class="gift-tag"><span aria-hidden="true">🏷️</span><span class="gift-tag__code">#{{ pedido.codigo }}</span></span>
+      </h1>
+
+      <div class="fb-row">
+        <span class="label">Status</span>
+        <span class="status-badge status-{{ pedido.status | lower | replace(' ', '-') }}">{{ pedido.status }}</span>
+      </div>
+      <div class="fb-row"><span class="label">Cliente</span><span class="value">{{ pedido.cliente.nome if pedido.cliente else '—' }}</span></div>
+      <div class="fb-row"><span class="label">Telefone</span><span class="value">{{ pedido.cliente.telefone if pedido.cliente else '—' }}</span></div>
+      <div class="fb-row"><span class="label">Email</span><span class="value">{{ pedido.cliente.email if pedido.cliente and pedido.cliente.email else '—' }}</span></div>
+      <div class="fb-row"><span class="label">Data do pedido</span><span class="value">{{ pedido.data_pedido.strftime('%d/%m/%Y %H:%M') }}</span></div>
+      <div class="fb-row"><span class="label">Observação</span><span class="value">{{ pedido.observacao or '—' }}</span></div>
+      <div class="fb-row"><span class="label">Mensagem no cartão</span><span class="value" style="font-style:italic;">{{ pedido.mensagem_cartao or '—' }}</span></div>
+
+      <div style="margin-top: 20px; border-top: 2px solid var(--linha); padding-top: 16px;">
+        <h2 style="font-size: 1.05rem; border: none; padding: 0; margin-bottom: 10px;">📍 Endereço de entrega</h2>
+        <div class="fb-row"><span class="label">Logradouro</span><span class="value">{{ pedido.local_entrega.logradouro if pedido.local_entrega else '—' }}</span></div>
+        <div class="fb-row"><span class="label">Número</span><span class="value">{{ pedido.local_entrega.numero if pedido.local_entrega else '—' }}</span></div>
+        <div class="fb-row"><span class="label">Complemento</span><span class="value">{{ pedido.local_entrega.complemento or '—' }}</span></div>
+        <div class="fb-row"><span class="label">Bairro</span><span class="value">{{ pedido.local_entrega.bairro if pedido.local_entrega else '—' }}</span></div>
+        <div class="fb-row"><span class="label">Cidade/UF</span><span class="value">{{ pedido.local_entrega.cidade if pedido.local_entrega else '—' }}/{{ pedido.local_entrega.estado if pedido.local_entrega else '—' }}</span></div>
+        <div class="fb-row"><span class="label">CEP</span><span class="value">{{ pedido.local_entrega.cep if pedido.local_entrega else '—' }}</span></div>
+        <div class="fb-row"><span class="label">Referência</span><span class="value">{{ pedido.local_entrega.referencia or '—' }}</span></div>
+      </div>
+
+      <div style="margin-top: 20px; border-top: 2px solid var(--linha); padding-top: 16px;">
+        <h2 style="font-size: 1.05rem; border: none; padding: 0; margin-bottom: 10px;">🛍️ Itens</h2>
+        {% for item in pedido.itens %}
+        <div class="fb-row">
+          <span>{{ item.produto.emoji }} {{ item.produto.nome }} × {{ item.quantidade }}</span>
+          <span class="value">R$ {{ "%.2f"|format(item.preco_unitario * item.quantidade) }}</span>
+        </div>
+        {% endfor %}
+        <div class="fb-total" style="text-align: left; margin-top: 12px;">
+          Subtotal: R$ {{ "%.2f"|format(pedido.subtotal) }}<br>
+          Taxa entrega: R$ {{ "%.2f"|format(pedido.taxa_entrega) }}<br>
+          <strong style="color: var(--ink);">TOTAL: R$ {{ "%.2f"|format(pedido.total) }}</strong>
+        </div>
+      </div>
+
+      <div class="update-form">
+        <label for="statusSelect"><strong>Atualizar status:</strong></label>
+        <select id="statusSelect">
+          {% for s in ['Pendente', 'Confirmado', 'Preparando', 'Saiu para Entrega', 'Entregue', 'Cancelado'] %}
+          <option value="{{ s }}" {% if pedido.status == s %}selected{% endif %}>{{ s }}</option>
+          {% endfor %}
+        </select>
+        <button type="button" class="btn btn--primary btn--sm" id="btn-atualizar">Atualizar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+  <script>
+    async function atualizarStatus() {
+      const select = document.getElementById('statusSelect');
+      const novoStatus = select.value;
+      const pedidoId = {{ pedido.id }};
+      const btn = document.getElementById('btn-atualizar');
+      const originalText = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = 'Atualizando...';
+      try {
+        const res = await fetch(`/api/pedido/${pedidoId}/status`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: novoStatus })
+        });
+        const data = await res.json();
+        if (data.success) {
+          FB.showToast('✅ Status atualizado com sucesso!');
+          setTimeout(() => location.reload(), 900);
+        } else {
+          FB.showToast('Erro: ' + (data.error || 'desconhecido'), { error: true });
+        }
+      } catch (e) {
+        FB.showToast('Erro de conexão: ' + e.message, { error: true });
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+      }
+    }
+    document.getElementById('btn-atualizar').addEventListener('click', atualizarStatus);
+  </script>
+</body>
+</html>

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Rastreie o status do seu pedido na Flores Brasil.">
+  <meta name="theme-color" content="#faf3e8">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌸</text></svg>">
+  <title>Rastrear Pedido - Flores Brasil</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
+  <style>
+    .timeline { margin-top: 14px; padding-left: 20px; border-left: 3px solid var(--rosa); }
+    .timeline li { list-style: none; padding: 8px 0; border-bottom: 1px solid var(--linha); }
+    .timeline li:last-child { border-bottom: none; }
+    .timeline .ativo { font-weight: 700; color: var(--musgo-alt); }
+    .timeline small { color: var(--seco-light); }
+    .result-box { margin-top: 20px; padding: 18px; background: var(--creme); border-radius: var(--radius-md); display: none; }
+  </style>
+</head>
+<body>
+  <main class="fb-page-center" role="main">
+    <div class="fb-container--narrow" style="width: 100%;">
+      <div class="fb-card">
+        <h1 style="text-align:center;">🔍 Rastrear Pedido</h1>
+        <form id="rastreioForm">
+          <div class="field">
+            <label for="codigoInput" class="sr-only">Código do pedido</label>
+            <input type="text" id="codigoInput" placeholder="Digite o código do pedido (ex: WD5NPSIE)" required autocomplete="off">
+          </div>
+          <button type="submit" class="btn btn--primary btn--block" id="btn-consultar">Consultar</button>
+        </form>
+        <div id="resultado" class="result-box" role="status" aria-live="polite"></div>
+        <div id="erro" class="field has-error" style="margin-top: 12px; display:none;">
+          <span class="error-text" style="display:block;" id="erro-texto"></span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="{{ url_for('static', filename='js/theme.js') }}"></script>
+  <script>
+    const escapeHtml = FB.escapeHtml;
+
+    document.getElementById('rastreioForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const codigo = document.getElementById('codigoInput').value.trim();
+      const resultDiv = document.getElementById('resultado');
+      const erroDiv = document.getElementById('erro');
+      const erroTexto = document.getElementById('erro-texto');
+      const btn = document.getElementById('btn-consultar');
+      resultDiv.style.display = 'none';
+      erroDiv.style.display = 'none';
+
+      if (!codigo) {
+        erroTexto.textContent = 'Por favor, insira o código do pedido.';
+        erroDiv.style.display = 'block';
+        return;
+      }
+
+      const originalText = btn.innerHTML;
+      btn.disabled = true;
+      btn.innerHTML = '⏳ Consultando...';
+
+      try {
+        const res = await fetch(`/api/rastrear/${codigo}`);
+        const data = await res.json();
+        if (!data.success) {
+          erroTexto.textContent = data.error || 'Pedido não encontrado.';
+          erroDiv.style.display = 'block';
+          return;
+        }
+
+        // Exibe o resultado
+        resultDiv.style.display = 'block';
+        const pedido = data.pedido;
+        const timeline = data.timeline || [];
+        let html = `<div class="gift-tag" style="margin-bottom:10px;"><span aria-hidden="true">🏷️</span><span class="gift-tag__code">#${escapeHtml(pedido.codigo)}</span></div>`;
+        html += `<p>Status atual: <span class="status-badge status-${String(pedido.status).toLowerCase().replace(/\s+/g,'-')}">${escapeHtml(pedido.status)}</span></p>`;
+        html += `<p style="margin-top:8px;"><strong>Total:</strong> R$ ${pedido.total.toFixed(2).replace('.',',')}</p>`;
+        html += `<p><strong>Data:</strong> ${new Date(pedido.data_pedido).toLocaleString('pt-BR')}</p>`;
+
+        if (timeline.length) {
+          html += `<div class="timeline"><ul>`;
+          timeline.forEach(item => {
+            const ativo = item.ativo ? 'ativo' : '';
+            html += `<li class="${ativo}">${escapeHtml(item.status)} — ${escapeHtml(item.descricao)}<br><small>${new Date(item.data).toLocaleString('pt-BR')}</small></li>`;
+          });
+          html += `</ul></div>`;
+        }
+        resultDiv.innerHTML = html;
+
+      } catch (err) {
+        erroTexto.textContent = 'Erro de conexão. Tente novamente.';
+        erroDiv.style.display = 'block';
+        console.error(err);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+      }
+    });
+  </script>
+</body>
+</html>

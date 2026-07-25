@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#faf3e8">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌸</text></svg>">
+  <title>Login Admin - Flores Brasil</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/theme.css') }}">
+</head>
+<body>
+  <main class="fb-page-center" role="main">
+    <div class="fb-card fb-container--narrow" style="width: 100%; max-width: 400px; text-align: center;">
+      <h1>🌸 Flores Brasil</h1>
+      <p style="color: var(--seco); margin-bottom: 24px;">Área administrativa</p>
+      <form method="post">
+        <div class="field" style="text-align: left;">
+          <label for="password" class="sr-only">Senha</label>
+          <input type="password" id="password" name="password" placeholder="Digite a senha" required autofocus>
+        </div>
+        <button type="submit" class="btn btn--primary btn--block">Entrar</button>
+        {% if erro %}
+          <p role="alert" style="color: var(--erro); margin-top: 14px; font-size: 0.9rem;">{{ erro }}</p>
+        {% endif %}
+      </form>
+      <a href="/" class="btn btn--ghost btn--block" style="margin-top: 16px;">← Voltar à loja</a>
+    </div>
+  </main>
+</body>
+</html>
