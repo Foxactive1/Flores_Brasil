@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    container_name: flores_brasil
+    ports:
+      - "5000:5000"
+    environment:
+      - DATABASE_URL=sqlite:////app/instance/flores_brasil.db
+      - SECRET_KEY=${SECRET_KEY:-dev-secret-key}
+      - GROQ_API_KEY=${GROQ_API_KEY}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-admin123}
+      - WHATSAPP_NUMBER=${WHATSAPP_NUMBER:-5516993117529}
+      - ENTREGA_TAXA=${ENTREGA_TAXA:-15.0}
+      - ENTREGA_GRATIS_ACIMA=${ENTREGA_GRATIS_ACIMA:-100.0}
+    volumes:
+      - ./instance:/app/instance   # persistência do banco SQLite
+      - ./logs:/app/logs           # persistência dos logs
+    restart: unless-stopped
