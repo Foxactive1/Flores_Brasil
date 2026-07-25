@@ -1,1 +1,344 @@
+/* ============================================================
+   FLORES BRASIL — Design System
+   Identidade: "etiqueta de floricultura" — papel kraft, tinta
+   botânica, códigos de pedido tratados como tags de presente.
+   Um único arquivo, compartilhado por loja, checkout, rastreio
+   e painel admin, para eliminar CSS duplicado entre páginas.
+   ============================================================ */
 
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Jost:wght@300;400;500;600;700&display=swap');
+
+/* ---------- Tokens ---------- */
+:root {
+  /* Paleta botânica: tinta escura, musgo, terracota seca, ouro de selo */
+  --ink:        #241811;
+  --terra:      #2d1f14;
+  --musgo:      #3a4a2f;
+  --musgo-alt:  #2e6b47;
+  --seco:       #7a5b4b;
+  --seco-light: #a3907f;
+  --rosa:       #c4877a;
+  --rosa-deep:  #a06b5e;
+  --petala:     #e8b4a2;
+  --ouro:       #c9a84c;
+  --ouro-claro: #f0d080;
+  --creme:      #faf3e8;
+  --bg:         #fff9f2;
+  --paper:      #ffffff;
+  --linha:      #f0e4dc;
+  --linha-suave:#f5efe8;
+
+  --erro:       #b3261e;
+  --erro-bg:    #fbeae9;
+  --sucesso:    #2e6b47;
+  --sucesso-bg: #e9f3ec;
+  --aviso:      #8a6d1a;
+  --aviso-bg:   #fdf3d9;
+  --info:       #2158a0;
+  --info-bg:    #e8f0fb;
+
+  --font-serif: 'Cormorant Garamond', Georgia, serif;
+  --font-sans:  'Jost', -apple-system, sans-serif;
+
+  --radius-sm: 10px;
+  --radius-md: 18px;
+  --radius-lg: 28px;
+  --radius-pill: 999px;
+
+  --shadow-sm: 0 2px 8px rgba(36,24,17,0.06);
+  --shadow-md: 0 8px 24px rgba(36,24,17,0.08);
+  --shadow-lg: 0 20px 40px -16px rgba(36,24,17,0.18);
+
+  --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px;
+  --space-5: 20px; --space-6: 24px; --space-8: 32px; --space-10: 40px;
+
+  color-scheme: light;
+}
+
+/* ---------- Reset & base ---------- */
+*, *::before, *::after { box-sizing: border-box; }
+* { margin: 0; padding: 0; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  font-family: var(--font-sans);
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+img, svg { display: block; max-width: 100%; }
+
+a { color: var(--rosa-deep); }
+a:not([class]) { text-decoration-color: var(--petala); text-underline-offset: 2px; }
+
+h1, h2, h3 { font-family: var(--font-serif); color: var(--terra); font-weight: 600; line-height: 1.15; }
+
+/* Foco visível em qualquer elemento interativo — obrigatório p/ teclado */
+:focus-visible {
+  outline: 3px solid var(--rosa);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+button, a, input, select, textarea { font-family: inherit; }
+
+/* Respeita preferência de movimento reduzido */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Skip link — acessibilidade de teclado */
+.skip-link {
+  position: absolute;
+  left: 8px; top: -60px;
+  background: var(--terra);
+  color: #fff;
+  padding: 10px 18px;
+  border-radius: var(--radius-sm);
+  z-index: 1000;
+  transition: top 0.15s;
+}
+.skip-link:focus { top: 8px; }
+
+/* ---------- Layout ---------- */
+.fb-container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
+.fb-container--narrow { max-width: 640px; }
+.fb-container--md { max-width: 860px; }
+
+.fb-page-center {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 20px;
+}
+
+/* ---------- Navbar ---------- */
+.fb-navbar {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(250,243,232,0.94);
+  backdrop-filter: blur(10px);
+  padding: 14px 24px;
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid transparent;
+  transition: box-shadow 0.25s, border-color 0.25s;
+}
+.fb-navbar.is-scrolled { box-shadow: var(--shadow-sm); border-color: var(--linha); }
+.fb-brand {
+  font-family: var(--font-serif); font-size: 1.6rem; font-weight: 600;
+  color: var(--terra); text-decoration: none; letter-spacing: -0.3px;
+  display: inline-flex; align-items: center; gap: 8px;
+}
+
+/* ---------- Buttons ---------- */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  border: none; border-radius: var(--radius-pill);
+  font-family: var(--font-sans); font-weight: 600; font-size: 0.95rem;
+  padding: 12px 24px; cursor: pointer;
+  transition: background 0.18s, transform 0.12s, box-shadow 0.18s;
+  text-decoration: none;
+}
+.btn:active { transform: scale(0.97); }
+.btn:disabled { cursor: not-allowed; opacity: 0.6; transform: none; }
+
+.btn--primary { background: var(--rosa); color: #fff; }
+.btn--primary:hover:not(:disabled) { background: var(--rosa-deep); }
+
+.btn--outline { background: none; color: var(--seco); border: 1.5px solid var(--rosa); }
+.btn--outline:hover:not(:disabled) { background: var(--rosa); color: #fff; }
+
+.btn--ghost { background: none; color: var(--seco); border: 1.5px solid var(--linha); }
+.btn--ghost:hover:not(:disabled) { border-color: var(--rosa); color: var(--rosa-deep); }
+
+.btn--whatsapp { background: #25d366; color: #fff; width: 100%; padding: 14px; font-size: 1rem; }
+.btn--whatsapp:hover:not(:disabled) { background: #1eac54; }
+.btn--whatsapp:disabled { background: #b6bdb2; }
+
+.btn--danger { background: var(--erro); color: #fff; }
+.btn--danger:hover:not(:disabled) { background: #8f1e18; }
+
+.btn--sm { padding: 8px 18px; font-size: 0.85rem; }
+.btn--block { width: 100%; }
+
+/* ---------- Cards / panels ---------- */
+.fb-card {
+  background: var(--paper);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  border: 1px solid var(--linha);
+  box-shadow: var(--shadow-sm);
+}
+.fb-card h1, .fb-card h2 {
+  border-bottom: 2px solid var(--linha);
+  padding-bottom: 12px;
+  margin-bottom: 18px;
+}
+
+/* ---------- Forms ---------- */
+.field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+.field label { font-size: 0.85rem; font-weight: 600; color: var(--seco); }
+.field .hint { font-size: 0.78rem; color: var(--seco-light); }
+.field .error-text { font-size: 0.8rem; color: var(--erro); display: none; }
+.field.has-error .error-text { display: block; }
+.field.has-error input, .field.has-error textarea { border-color: var(--erro); }
+
+input[type="text"], input[type="password"], input[type="tel"], input[type="email"],
+input:not([type]), textarea, select {
+  width: 100%;
+  border: 1.5px solid var(--linha);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  font-size: 1rem;
+  background: var(--paper);
+  color: var(--ink);
+  outline: none;
+  transition: border-color 0.18s;
+}
+input:focus, textarea:focus, select:focus { border-color: var(--rosa); }
+textarea { resize: vertical; font-family: inherit; }
+
+.field-row { display: flex; gap: 12px; }
+.field-row .field { flex: 1; }
+
+/* ---------- Status badges ---------- */
+.status-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 4px 14px; border-radius: var(--radius-pill);
+  font-weight: 700; font-size: 0.78rem; text-transform: capitalize;
+  white-space: nowrap;
+}
+.status-badge::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.status-pendente          { background: var(--aviso-bg); color: var(--aviso); }
+.status-confirmado        { background: var(--sucesso-bg); color: var(--sucesso); }
+.status-preparando        { background: #fdeadb; color: #a25a12; }
+.status-saiu-para-entrega { background: var(--info-bg); color: var(--info); }
+.status-entregue          { background: #e6e6f7; color: #423f9e; }
+.status-cancelado         { background: var(--erro-bg); color: var(--erro); }
+
+/* ---------- "Tag de presente" — elemento assinatura ----------
+   Usado sempre que um código de pedido aparece: rastreio, pedido,
+   checkout, confirmação, painel admin. Lembra a etiqueta amarrada
+   no talo das flores. */
+.gift-tag {
+  position: relative;
+  display: inline-flex; align-items: center; gap: 10px;
+  background: var(--creme);
+  border: 1.5px dashed var(--ouro);
+  border-radius: var(--radius-sm);
+  padding: 8px 18px 8px 14px;
+  font-family: var(--font-serif);
+  font-size: 1.1rem; font-weight: 600; color: var(--terra);
+  letter-spacing: 0.5px;
+}
+.gift-tag::before {
+  content: '';
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--bg); border: 1.5px dashed var(--ouro);
+  margin-left: -4px;
+}
+.gift-tag .gift-tag__code { font-variant-numeric: tabular-nums; }
+
+/* ---------- Toast ---------- */
+.fb-toast {
+  position: fixed; bottom: 28px; left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: var(--ink); color: #fef2e6;
+  padding: 12px 26px; border-radius: var(--radius-pill);
+  opacity: 0; pointer-events: none; z-index: 1200;
+  transition: 0.25s; white-space: nowrap; max-width: 90vw;
+  box-shadow: var(--shadow-lg);
+  font-size: 0.9rem;
+  display: flex; align-items: center; gap: 8px;
+}
+.fb-toast.show { opacity: 1; transform: translateX(-50%) translateY(0); pointer-events: auto; }
+.fb-toast--error { background: var(--erro); color: #fff; }
+
+/* ---------- Modal (substitui alert()/prompt()/confirm()) ---------- */
+.fb-modal-overlay {
+  display: none; position: fixed; inset: 0; z-index: 1300;
+  background: rgba(36,24,17,0.45); backdrop-filter: blur(2px);
+  align-items: center; justify-content: center; padding: 20px;
+}
+.fb-modal-overlay.open { display: flex; }
+.fb-modal {
+  background: var(--paper); border-radius: var(--radius-lg);
+  padding: 28px; width: min(440px, 100%);
+  box-shadow: var(--shadow-lg);
+  animation: fb-modal-in 0.2s ease-out;
+}
+@keyframes fb-modal-in { from { opacity: 0; transform: translateY(12px) scale(0.98); } to { opacity: 1; transform: none; } }
+.fb-modal h3 { margin-bottom: 6px; }
+.fb-modal p { color: var(--seco); font-size: 0.92rem; margin-bottom: 18px; }
+.fb-modal__actions { display: flex; gap: 10px; margin-top: 20px; }
+.fb-modal__actions .btn { flex: 1; }
+
+/* ---------- Empty / error states ---------- */
+.fb-empty {
+  text-align: center; padding: 56px 20px; color: var(--seco-light);
+}
+.fb-empty__emoji { font-size: 2.6rem; display: block; margin-bottom: 10px; }
+.fb-empty__title { color: var(--seco); font-weight: 600; margin-bottom: 4px; }
+
+/* ---------- Responsive data table → cards on mobile ---------- */
+.fb-table-wrap { background: var(--paper); border-radius: var(--radius-md); box-shadow: var(--shadow-sm); overflow: hidden; }
+table.fb-table { width: 100%; border-collapse: collapse; }
+.fb-table th, .fb-table td { padding: 14px 18px; text-align: left; border-bottom: 1px solid var(--linha-suave); }
+.fb-table th {
+  background: var(--terra); color: #fdf6ef;
+  font-weight: 600; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.6px;
+}
+.fb-table tr:last-child td { border-bottom: none; }
+.fb-table tbody tr:hover td { background: var(--bg); }
+
+@media (max-width: 720px) {
+  .fb-table thead { display: none; }
+  .fb-table, .fb-table tbody, .fb-table tr, .fb-table td { display: block; width: 100%; }
+  .fb-table tr {
+    background: var(--paper); border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm); margin-bottom: 14px; padding: 6px 4px;
+  }
+  .fb-table td {
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 12px; border-bottom: 1px solid var(--linha-suave); text-align: right;
+  }
+  .fb-table td:last-child { border-bottom: none; }
+  .fb-table td::before {
+    content: attr(data-label);
+    font-weight: 600; color: var(--seco); text-align: left; font-size: 0.82rem;
+  }
+  .fb-table-wrap { background: none; box-shadow: none; }
+}
+
+/* ---------- Row / summary utilities ---------- */
+.fb-row { display: flex; justify-content: space-between; gap: 12px; padding: 8px 0; border-bottom: 1px solid var(--linha-suave); }
+.fb-row:last-child { border-bottom: none; }
+.fb-row .label { color: var(--seco); }
+.fb-row .value { font-weight: 500; text-align: right; }
+.fb-total { font-size: 1.25rem; font-weight: 700; color: var(--musgo-alt); text-align: right; margin-top: 14px; }
+
+/* ---------- Pagination ---------- */
+.fb-pagination { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+.fb-pagination a, .fb-pagination span {
+  padding: 8px 16px; border-radius: var(--radius-pill); text-decoration: none;
+  color: var(--terra); background: var(--linha-suave); font-size: 0.88rem;
+}
+.fb-pagination a:hover { background: var(--petala); }
+
+/* ---------- Reveal-on-scroll ---------- */
+.reveal { opacity: 0; transform: translateY(20px); transition: 0.55s; }
+.reveal.visible { opacity: 1; transform: translateY(0); }
+@media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; } }
+
+/* ---------- Visually-hidden (screen-reader only) ---------- */
+.sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0;
+}
