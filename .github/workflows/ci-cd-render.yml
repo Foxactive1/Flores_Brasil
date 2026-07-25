@@ -26,10 +26,11 @@ jobs:
       - name: Validate Python files
         run: python -m compileall -q .
 
-      - name: Validate Flask import
+      - name: Validate Flask import without external AI credentials
         env:
           SECRET_KEY: ci-test-secret
           ADMIN_PASSWORD: ci-test-admin
+          GROQ_API_KEY: ''
         run: python -c "from app import app; print('Flask OK:', app.name)"
 
   deploy:
