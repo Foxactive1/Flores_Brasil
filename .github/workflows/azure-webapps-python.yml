@@ -1,0 +1,41 @@
+# .github/workflows/azure-webapps-python.yml
+name: Deploy to Azure Web App (Python)
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:  # permite execução manual
+
+env:
+  AZURE_WEBAPP_NAME: flores-brasil           # ⚠️ Substitua pelo nome do seu App Service
+  AZURE_WEBAPP_PACKAGE_PATH: '.'
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Create instance directory
+        run: mkdir -p instance
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ env.AZURE_WEBAPP_NAME }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+          # startup-command: 'gunicorn --bind 0.0.0.0:8000 app:app'  # opcional se o default não funcionar
